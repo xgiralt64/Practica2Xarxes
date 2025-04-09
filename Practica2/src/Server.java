@@ -2,7 +2,7 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 
-public class Main {
+public class Server {
 
 	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
 	private static CharactersDB charactersDB;
