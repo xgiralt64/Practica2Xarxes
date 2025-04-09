@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class Main {
 
-	private static final String CHARACTERS_DB_NAME = "charactersDB.dat";
+	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
 	private static CharactersDB charactersDB;
 
 	public static void main (String[] args) {

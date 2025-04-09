@@ -4,18 +4,16 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-public class Main {
+public class Client {
+
+	//Ara mateix nomes es una copia del main proporcionat pel professor.
+	//S'ha de borrar totes les referències a la BD ja que aquest fitxer no hi pot accedir
 
 	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
-	private static CharactersDB charactersDB;
 
 	public static void main (String[] args) {
-		try {
-			charactersDB = new CharactersDB(CHARACTERS_DB_NAME);
-		} catch (IOException ioe) {
-			System.err.println ("Error obrint la base de dades!");
-			System.exit (-1);
-		}
+
+
 		for (;;) {
 			printMenu();
 			int option = getOption();
@@ -212,13 +210,7 @@ public class Main {
 	}
 
 	private static void quit() {
-		try {
-			charactersDB.close();
-			System.exit (0);
-		} catch (IOException ioe) {
-			System.err.println ("Error tancant base de dades!");
-			System.exit (-1);
-		}
-	}
+        System.exit (0);
+    }
 
 }

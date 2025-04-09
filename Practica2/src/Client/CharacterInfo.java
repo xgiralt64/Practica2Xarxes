@@ -1,3 +1,5 @@
+package Client;
+
 public class CharacterInfo {
 
 	private String name;

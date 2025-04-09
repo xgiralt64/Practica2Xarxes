@@ -1,3 +1,5 @@
+package Client;
+
 public class PackUtils {
 
 	public static void packByte (byte b,

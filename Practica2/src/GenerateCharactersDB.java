@@ -4,9 +4,9 @@ import java.io.IOException;
 
 public class GenerateCharactersDB {
 
-	private static final String CHARACTERS_DB_NAME = "charactersDB.dat";
-	private static final String CHARACTERS_FILES = "characters.txt";
-	private static final String CHARACTERS_DIR = "Characters";
+	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
+	private static final String CHARACTERS_FILES = "src/characters.txt";
+	private static final String CHARACTERS_DIR = "src/Characters";
 	private static CharactersDB charactersDB;
 
 	public static void main (String[] args) {
