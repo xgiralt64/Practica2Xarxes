@@ -1,0 +1,17 @@
+Vin.txt
+Hoid.txt
+Steris.txt
+Vasher.txt
+Wax.txt
+Raoden.txt
+Shallan.txt
+Khriss.txt
+Vivenna.txt
+Kaladin.txt
+Syl.txt
+Kelsier.txt
+Tress.txt
+Mervin.txt
+Yumi.txt
+Nomad.txt
+Spensa.txt
