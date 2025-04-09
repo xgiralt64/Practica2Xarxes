@@ -39,7 +39,7 @@ public class Server {
 	}
 
 	private static void printMenu() {
-		System.out.println ("Menú d'opcions:");
+		System.out.println ("Menú d'opcions del Servidor:");
 		System.out.println ("1 - Llista els noms complets dels personatges.");
 		System.out.println ("2 - Obté la informació d'un personatge.");
 		System.out.println ("3 - Afegeix un personatge.");
