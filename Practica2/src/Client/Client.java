@@ -33,7 +33,7 @@ public class Client {
 						break;
 					case 4:
 						//FALTA
-						out.write("4".getBytes());
+						out.write(deleteCharacter().getBytes());
 						break;
 					case 5:
 						quit();
@@ -97,9 +97,6 @@ public class Client {
 		return "2-" + name; //Retornem amb el format 2-<NomPersonatge> (apunt per enviar al server)
 
 	}
-
-
-
 
 
 	private static String addCharacter() {
@@ -192,8 +189,18 @@ public class Client {
         return "3-" + name +"-"+ surname +"-"+ intelligence +"-"+ memory +"-"+ strength +"-"+ agility +"-"+ constitution;
     }
 
+	private static String deleteCharacter() {
+		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
+		System.out.println ("Escriu el nom del personatge a eliminar: ");
+		String name = "";
+		try {
+			name = in.readLine();
+		} catch (IOException ioe) {
+			System.err.println ("Error llegint el nom!");
+		}
+		return "4-" + name; //Retornem amb el format 4-<NomPersonatge> (apunt per enviar al server)
 
-
+	}
 
 	private static void quit() {
 		System.out.println("Sortint del client...");

@@ -3,6 +3,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Server {
+	//BUGS:
+	//quan el client envia un missatge amb un espai no funciona
+
 
 	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
 	private static CharactersDB charactersDB;
@@ -108,25 +111,27 @@ public class Server {
 		return "OK, personatge afegit correctament"; //Si tot va bé li diem al client
 	}
 
-	private static void deleteCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		System.out.println ("Escriu el nom del personatge a eliminar: ");
-		String name;
-		try {
-			name = in.readLine();
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint el nom!");
-			return;
-		}
-		try {
-			boolean success = charactersDB.deleteCharacter (name);
-			if (!success) {
-				System.out.println ("Personatge no trobat.");
+	public static String deleteCharacter(String name) {
+
+        String fullName = "";
+        try {
+            //Abans d'eliminar agafo el nom complet simplement per dir-li al client quin personatge s'ha eliminat exactament
+            int n = charactersDB.searchCharacter(name);
+			if (n != -1) {
+				fullName = charactersDB.readCharacterInfo(n).getName() +" "+ charactersDB.readCharacterInfo(n).getSurname();
 			}
-		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
-		}
-	}
+
+            boolean success = charactersDB.deleteCharacter(name);
+            if (!success) {
+                System.out.println("Personatge no trobat.");
+                return "ERROR: Personatge no trobat";
+            }
+        } catch (IOException ioe) {
+            System.err.println("Error a la base de dades!");
+            return "Error a la base de dades!";
+        }
+        return "OK, personatge " + fullName + " eliminat correctament";
+    }
 
 	private static void quit() {
 		try {
@@ -178,11 +183,7 @@ class ClientHandler implements Runnable {
 					case 1 -> Server.listCompleteNames();
 					case 2 -> Server.infoFromOneCharacter(input.substring(2));
 					case 3 -> Server.addCharacter(input.substring(2));
-						/*
-
-						case 3 -> addCharacter();
-						case 4 -> deleteCharacter();
-						*/
+					case 4 -> Server.deleteCharacter(input.substring(2));
 					default -> "Número no vàlid. Introdueix un valor del 1 al 5.";
 				};
 
