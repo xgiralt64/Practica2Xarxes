@@ -23,7 +23,10 @@ public class Client {
 						break;
 					case 2:
 						//FALTA
-						out.write("2".getBytes());
+						//Enviem la resposta de la funció del client.
+						//Format:2-<NomPersonatge> (Despres el servidor ja tallarà cada part del missatge)
+						out.write(infoFromOneCharacter().getBytes());
+
 						break;
 					case 3:
 						//FALTA
@@ -55,6 +58,8 @@ public class Client {
 		}
 	}
 
+
+
 	private static void printMenu() {
 		System.out.println("Menú d'opcions del Client:");
 		System.out.println("1 - Llista els noms complets dels personatges.");
@@ -79,6 +84,22 @@ public class Client {
 			}
 		}
 	}
+
+
+	private static String infoFromOneCharacter() {
+		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
+		System.out.println ("Escriu el nom del personatge: ");
+		String name = "";
+		try {
+			name = in.readLine();
+		} catch (IOException ioe) {
+			System.err.println ("Error llegint el nom!");
+		}
+		return "2-" + name; //Retornem amb el format 2-<NomPersonatge> (apunt per enviar al server)
+
+	}
+
+
 
 	private static void quit() {
 		System.out.println("Sortint del client...");

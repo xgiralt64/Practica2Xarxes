@@ -25,7 +25,7 @@ public class Server {
 			while (true) {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("Nou client connectat.");
-				new Thread(new FunctionHandler(clientSocket)).start();
+				new Thread(new ClientHandler(clientSocket)).start();
 			}
 
 		} catch (IOException e) {
@@ -59,27 +59,21 @@ public class Server {
 		return characters.toString();
 	}
 
-	private static void infoFromOneCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		System.out.println ("Escriu el nom del personatge: ");
-		String name;
-		try {
-			name = in.readLine();
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint el nom!");
-			return;
-		}
+	public static String infoFromOneCharacter(String name) {
 		try {
 			int n = charactersDB.searchCharacter (name);
 			if (n != -1) {
 				CharacterInfo ci = charactersDB.readCharacterInfo (n);
-				System.out.println (ci);
+				return ci.toString(); //Retorno la String del personatge
+
 			} else {
 				System.out.println ("Personatge no trobat.");
 			}
 		} catch (IOException ioe) {
 			System.err.println ("Error a la base de dades!");
 		}
+		return ""; //En cas d'error retorno "" (Mirar si es pot fer millor)
+
 	}
 
 	private static void addCharacter() {
@@ -207,10 +201,10 @@ public class Server {
 
 
 
-class FunctionHandler implements Runnable {
+class ClientHandler implements Runnable {
 	private Socket clientSocket;
 
-	public FunctionHandler(Socket socket) {
+	public ClientHandler(Socket socket) {
 		this.clientSocket = socket;
 	}
 
@@ -229,7 +223,10 @@ class FunctionHandler implements Runnable {
 
 				int numero;
 				try {
-					numero = Integer.parseInt(input);
+					//Agafo només el primer caracter seguint el format:
+					//<OpcióMenu>-<Missatge>
+					numero = Integer.parseInt(String.valueOf(input.charAt(0)));
+
 				} catch (NumberFormatException e) {
 					out.write("Error: Introdueix un número enter.".getBytes());
 					continue;
@@ -237,8 +234,9 @@ class FunctionHandler implements Runnable {
 
 				String resposta = switch (numero) {
 					case 1 -> Server.listCompleteNames();
+					case 2 -> Server.infoFromOneCharacter(input.substring(2));
 						/*
-						case 2 -> infoFromOneCharacter();
+
 						case 3 -> addCharacter();
 						case 4 -> deleteCharacter();
 						*/
