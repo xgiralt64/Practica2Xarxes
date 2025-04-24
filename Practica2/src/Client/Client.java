@@ -1,216 +1,87 @@
 package Client;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.*;
 
 public class Client {
+	public static void main(String[] args) {
+		try (
+				Socket socket = new Socket("localhost", 12345);
+				InputStream in = socket.getInputStream();
+				OutputStream out = socket.getOutputStream();
+				BufferedReader consola = new BufferedReader(new InputStreamReader(System.in))
+		) {
 
-	//Ara mateix nomes es una copia del main proporcionat pel professor.
-	//S'ha de borrar totes les referències a la BD ja que aquest fitxer no hi pot accedir
+			for (;;) {
+				printMenu();
+				int option = getOption();
 
-	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
+				switch (option) {
+					case 1:
+						//Envia "1" per llistar noms
+						out.write("1".getBytes());
+						break;
+					case 2:
+						//FALTA
+						out.write("2".getBytes());
+						break;
+					case 3:
+						//FALTA
+						out.write("3".getBytes());
+						break;
+					case 4:
+						//FALTA
+						out.write("4".getBytes());
+						break;
+					case 5:
+						quit();
+						break;
+				}
 
-	public static void main (String[] args) {
+				// Llegeix i mostra la resposta del servidor
+				byte[] buffer = new byte[2048];
+				int bytesRead = in.read(buffer);
+				if (bytesRead != -1) {
+					String resposta = new String(buffer, 0, bytesRead);
+					System.out.println("Servidor:\n" + resposta);
+				}
 
-
-		for (;;) {
-			printMenu();
-			int option = getOption();
-			switch (option) {
-				case 1:
-					listCompleteNames();
-					break;
-				case 2:
-					infoFromOneCharacter();
-					break;
-				case 3:
-					addCharacter();
-					break;
-				case 4:
-					deleteCharacter();
-					break;
-				case 5:
-					quit();
-					break;
+				System.out.println();
 			}
-			System.out.println();
+
+		} catch (IOException e) {
+			System.err.println("Error de connexió amb el servidor.");
+			e.printStackTrace();
 		}
 	}
 
 	private static void printMenu() {
-		System.out.println ("Menú d'opcions del Client:");
-		System.out.println ("1 - Llista els noms complets dels personatges.");
-		System.out.println ("2 - Obté la informació d'un personatge.");
-		System.out.println ("3 - Afegeix un personatge.");
-		System.out.println ("4 - Elimina un personatge.");
-		System.out.println ("5 - Sortir.");
+		System.out.println("Menú d'opcions del Client:");
+		System.out.println("1 - Llista els noms complets dels personatges.");
+		System.out.println("2 - Obté la informació d'un personatge.");
+		System.out.println("3 - Afegeix un personatge.");
+		System.out.println("4 - Elimina un personatge.");
+		System.out.println("5 - Sortir.");
 	}
 
 	private static int getOption() {
 		for (;;) {
 			try {
-				BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-				System.out.println ("Escull una opció: ");
+				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+				System.out.print("Escull una opció: ");
 				String optionStr = in.readLine();
-				int option = Integer.parseInt (optionStr);
-				if (0 < option && option <= 5) {
+				int option = Integer.parseInt(optionStr);
+				if (option >= 1 && option <= 5) {
 					return option;
 				}
 			} catch (Exception e) {
-				System.err.println ("Error llegint opció!");
+				System.err.println("Error llegint opció!");
 			}
-		}
-	}
-
-	private static void listCompleteNames() {
-		int numCharacters = charactersDB.getNumCharacters();
-		System.out.println();
-		try {
-			for (int i = 0; i < numCharacters; i++) {
-				CharacterInfo ci = charactersDB.readCharacterInfo (i);
-				System.out.println (ci.getName() + " " + ci.getSurname());
-			}
-		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
-		}
-	}
-
-	private static void infoFromOneCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		System.out.println ("Escriu el nom del personatge: ");
-		String name;
-		try {
-			name = in.readLine();
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint el nom!");
-			return;
-		}
-		try {
-			int n = charactersDB.searchCharacter (name);
-			if (n != -1) {
-				CharacterInfo ci = charactersDB.readCharacterInfo (n);
-				System.out.println (ci);
-			} else {
-				System.out.println ("Personatge no trobat.");
-			}
-		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
-		}
-	}
-
-	private static void addCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		CharacterInfo ci;
-		try {
-			System.out.println ("Escriu el nom del personatge a afegir: ");
-			String name = in.readLine();
-			while (name == null || name.isEmpty()) {
-				System.out.println ("El nom del personatge no pot ser buit.");
-				System.out.println ("Escriu el nom del personatge a afegir: ");
-				name = in.readLine();
-			}
-			System.out.println ("Escriu el cognom del personatge a afegir: ");
-			String surname = in.readLine();
-
-			int intelligence = -1;
-			while (intelligence < 0) {
-				System.out.println ("Introdueix la intel·ligència: ");
-				String intelligenceStr = in.readLine();
-				if (intelligenceStr != null) {
-					try {
-						intelligence = Integer.parseInt (intelligenceStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int memory = -1;
-			while (memory < 0) {
-				System.out.println ("Introdueix la memòria: ");
-				String memoryStr = in.readLine();
-				if (memoryStr != null) {
-					try {
-						memory = Integer.parseInt (memoryStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int strength = -1;
-			while (strength < 0) {
-				System.out.println ("Introdueix la força: ");
-				String strengthStr = in.readLine();
-				if (strengthStr != null) {
-					try {
-						strength = Integer.parseInt (strengthStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int agility = -1;
-			while (agility < 0) {
-				System.out.println ("Introdueix l'agilitat: ");
-				String agilityStr = in.readLine();
-				if (agilityStr != null) {
-					try {
-						agility = Integer.parseInt (agilityStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int constitution = -1;
-			while (constitution < 0) {
-				System.out.println ("Introdueix la constitució: ");
-				String constitutionStr = in.readLine();
-				if (constitutionStr != null) {
-					try {
-						constitution = Integer.parseInt (constitutionStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			ci = new CharacterInfo(name, surname,
-		            intelligence, memory, strength, agility, constitution);
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint la informació del personatge!");
-			return;
-		}
-		try {
-			boolean success = charactersDB.insertCharacter (ci);
-			if (!success) {
-				System.out.println ("Aquest personatge ja estava a la base de dades.");
-			}
-		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
-		}
-	}
-
-	private static void deleteCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		System.out.println ("Escriu el nom del personatge a eliminar: ");
-		String name;
-		try {
-			name = in.readLine();
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint el nom!");
-			return;
-		}
-		try {
-			boolean success = charactersDB.deleteCharacter (name);
-			if (!success) {
-				System.out.println ("Personatge no trobat.");
-			}
-		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
 		}
 	}
 
 	private static void quit() {
-        System.exit (0);
-    }
-
+		System.out.println("Sortint del client...");
+		System.exit(0);
+	}
 }

@@ -1,6 +1,6 @@
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class Server {
 
@@ -8,72 +8,55 @@ public class Server {
 	private static CharactersDB charactersDB;
 
 	public static void main (String[] args) {
+		final int PORT = 12345;
+
+		//Abans de fer res deixem que carregui la BD
 		try {
 			charactersDB = new CharactersDB (CHARACTERS_DB_NAME);
 		} catch (IOException ioe) {
 			System.err.println ("Error obrint la base de dades!");
 			System.exit (-1);
 		}
-		for (;;) {
-			printMenu();
-			int option = getOption();
-			switch (option) {
-				case 1:
-					listCompleteNames();
-					break;
-				case 2:
-					infoFromOneCharacter();
-					break;
-				case 3:
-					addCharacter();
-					break;
-				case 4:
-					deleteCharacter();
-					break;
-				case 5:
-					quit();
-					break;
+
+		//Per cada client acceptem la seva connexió i li creem un thread per a ell. (Nosaltres ho fem concurrent)
+		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+			System.out.println("Servidor escoltant al port " + PORT);
+
+			while (true) {
+				Socket clientSocket = serverSocket.accept();
+				System.out.println("Nou client connectat.");
+				new Thread(new FunctionHandler(clientSocket)).start();
 			}
-			System.out.println();
+
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
 	}
 
-	private static void printMenu() {
-		System.out.println ("Menú d'opcions del Servidor:");
-		System.out.println ("1 - Llista els noms complets dels personatges.");
-		System.out.println ("2 - Obté la informació d'un personatge.");
-		System.out.println ("3 - Afegeix un personatge.");
-		System.out.println ("4 - Elimina un personatge.");
-		System.out.println ("5 - Sortir.");
-	}
 
-	private static int getOption() {
-		for (;;) {
-			try {
-				BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-				System.out.println ("Escull una opció: ");
-				String optionStr = in.readLine();
-				int option = Integer.parseInt (optionStr);
-				if (0 < option && option <= 5) {
-					return option;
-				}
-			} catch (Exception e) {
-				System.err.println ("Error llegint opció!");
-			}
-		}
-	}
 
-	private static void listCompleteNames() {
+	public static String listCompleteNames() { //ns si les funcions poden ser publiques. Mirar
 		int numCharacters = charactersDB.getNumCharacters();
-		System.out.println();
+		//Construïm una String amb els Characters
+		StringBuilder characters = new StringBuilder();
+
 		try {
+			//Per cada Character l'afegim a l'String
 			for (int i = 0; i < numCharacters; i++) {
-				CharacterInfo ci = charactersDB.readCharacterInfo (i);
-				System.out.println (ci.getName() + " " + ci.getSurname());
+				CharacterInfo ci = charactersDB.readCharacterInfo(i);
+				characters.append(ci.getName())
+						.append(" ")
+						.append(ci.getSurname());
+				if (i < numCharacters - 1) {
+					characters.append("\n");
+				}
 			}
 		} catch (IOException ioe) {
-			System.err.println ("Error a la base de dades!");
+			System.err.println("Error a la base de dades!");
 		}
+
+		return characters.toString();
 	}
 
 	private static void infoFromOneCharacter() {
@@ -220,3 +203,62 @@ public class Server {
 	}
 
 }
+
+
+
+
+class FunctionHandler implements Runnable {
+	private Socket clientSocket;
+
+	public FunctionHandler(Socket socket) {
+		this.clientSocket = socket;
+	}
+
+	@Override
+	public void run() {
+		try (
+				InputStream in = clientSocket.getInputStream();
+				OutputStream out = clientSocket.getOutputStream()
+		) {
+			byte[] buffer = new byte[1024];
+			int bytesRead;
+
+			while ((bytesRead = in.read(buffer)) != -1) {
+				String input = new String(buffer, 0, bytesRead).trim();
+				System.out.println("Rebut: " + input);
+
+				int numero;
+				try {
+					numero = Integer.parseInt(input);
+				} catch (NumberFormatException e) {
+					out.write("Error: Introdueix un número enter.".getBytes());
+					continue;
+				}
+
+				String resposta = switch (numero) {
+					case 1 -> Server.listCompleteNames();
+						/*
+						case 2 -> infoFromOneCharacter();
+						case 3 -> addCharacter();
+						case 4 -> deleteCharacter();
+						*/
+					default -> "Número no vàlid. Introdueix un valor del 1 al 5.";
+				};
+
+				out.write(resposta.getBytes());
+			}
+
+		} catch (IOException e) {
+			System.out.println("Error de comunicació: " + e.getMessage());
+		} finally {
+			try {
+				clientSocket.close();
+				System.out.println("Client desconnectat.");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}
+
+
