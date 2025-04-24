@@ -28,11 +28,9 @@ public class Client {
 						out.write(infoFromOneCharacter().getBytes());
 						break;
 					case 3:
-						//FALTA
 						out.write(addCharacter().getBytes());
 						break;
 					case 4:
-						//FALTA
 						out.write(deleteCharacter().getBytes());
 						break;
 					case 5:
