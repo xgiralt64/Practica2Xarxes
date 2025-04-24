@@ -3,6 +3,7 @@ package Client;
 import java.io.*;
 import java.net.*;
 
+
 public class Client {
 	public static void main(String[] args) {
 		try (
@@ -22,15 +23,13 @@ public class Client {
 						out.write("1".getBytes());
 						break;
 					case 2:
-						//FALTA
 						//Enviem la resposta de la funció del client.
 						//Format:2-<NomPersonatge> (Despres el servidor ja tallarà cada part del missatge)
 						out.write(infoFromOneCharacter().getBytes());
-
 						break;
 					case 3:
 						//FALTA
-						out.write("3".getBytes());
+						out.write(addCharacter().getBytes());
 						break;
 					case 4:
 						//FALTA
@@ -98,6 +97,101 @@ public class Client {
 		return "2-" + name; //Retornem amb el format 2-<NomPersonatge> (apunt per enviar al server)
 
 	}
+
+
+
+
+
+	private static String addCharacter() {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        String name;
+        String surname;
+        int intelligence;
+        int memory;
+        int strength;
+        int agility;
+        int constitution;
+        try {
+            System.out.println("Escriu el nom del personatge a afegir: ");
+            name = in.readLine();
+            while (name == null || name.isEmpty()) {
+                System.out.println("El nom del personatge no pot ser buit.");
+                System.out.println("Escriu el nom del personatge a afegir: ");
+                name = in.readLine();
+            }
+            System.out.println("Escriu el cognom del personatge a afegir: ");
+            surname = in.readLine();
+
+            intelligence = -1;
+            while (intelligence < 0) {
+                System.out.println("Introdueix la intel·ligència: ");
+                String intelligenceStr = in.readLine();
+                if (intelligenceStr != null) {
+                    try {
+                        intelligence = Integer.parseInt(intelligenceStr);
+                    } catch (NumberFormatException nfe) {
+                        // Ignore
+                    }
+                }
+            }
+            memory = -1;
+            while (memory < 0) {
+                System.out.println("Introdueix la memòria: ");
+                String memoryStr = in.readLine();
+                if (memoryStr != null) {
+                    try {
+                        memory = Integer.parseInt(memoryStr);
+                    } catch (NumberFormatException nfe) {
+                        // Ignore
+                    }
+                }
+            }
+            strength = -1;
+            while (strength < 0) {
+                System.out.println("Introdueix la força: ");
+                String strengthStr = in.readLine();
+                if (strengthStr != null) {
+                    try {
+                        strength = Integer.parseInt(strengthStr);
+                    } catch (NumberFormatException nfe) {
+                        // Ignore
+                    }
+                }
+            }
+            agility = -1;
+            while (agility < 0) {
+                System.out.println("Introdueix l'agilitat: ");
+                String agilityStr = in.readLine();
+                if (agilityStr != null) {
+                    try {
+                        agility = Integer.parseInt(agilityStr);
+                    } catch (NumberFormatException nfe) {
+                        // Ignore
+                    }
+                }
+            }
+            constitution = -1;
+            while (constitution < 0) {
+                System.out.println("Introdueix la constitució: ");
+                String constitutionStr = in.readLine();
+                if (constitutionStr != null) {
+                    try {
+                        constitution = Integer.parseInt(constitutionStr);
+                    } catch (NumberFormatException nfe) {
+                        // Ignore
+                    }
+                }
+            }
+
+        } catch (IOException ioe) {
+            System.err.println("Error llegint la informació del personatge!");
+            return "";
+        }
+
+		//Format de retorn:
+        return "3-" + name +"-"+ surname +"-"+ intelligence +"-"+ memory +"-"+ strength +"-"+ agility +"-"+ constitution;
+    }
+
 
 
 

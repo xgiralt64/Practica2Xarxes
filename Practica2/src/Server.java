@@ -72,98 +72,40 @@ public class Server {
 		} catch (IOException ioe) {
 			System.err.println ("Error a la base de dades!");
 		}
-		return ""; //En cas d'error retorno "" (Mirar si es pot fer millor)
+		return ""; //En cas d'error retorno "" (Mirar si es pot fer millor).
 
 	}
 
-	private static void addCharacter() {
-		BufferedReader in = new BufferedReader (new InputStreamReader (System.in));
-		CharacterInfo ci;
-		try {
-			System.out.println ("Escriu el nom del personatge a afegir: ");
-			String name = in.readLine();
-			while (name == null || name.isEmpty()) {
-				System.out.println ("El nom del personatge no pot ser buit.");
-				System.out.println ("Escriu el nom del personatge a afegir: ");
-				name = in.readLine();
-			}
-			System.out.println ("Escriu el cognom del personatge a afegir: ");
-			String surname = in.readLine();
+	public static String addCharacter(String Character) {
 
-			int intelligence = -1;
-			while (intelligence < 0) {
-				System.out.println ("Introdueix la intel·ligència: ");
-				String intelligenceStr = in.readLine();
-				if (intelligenceStr != null) {
-					try {
-						intelligence = Integer.parseInt (intelligenceStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int memory = -1;
-			while (memory < 0) {
-				System.out.println ("Introdueix la memòria: ");
-				String memoryStr = in.readLine();
-				if (memoryStr != null) {
-					try {
-						memory = Integer.parseInt (memoryStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int strength = -1;
-			while (strength < 0) {
-				System.out.println ("Introdueix la força: ");
-				String strengthStr = in.readLine();
-				if (strengthStr != null) {
-					try {
-						strength = Integer.parseInt (strengthStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int agility = -1;
-			while (agility < 0) {
-				System.out.println ("Introdueix l'agilitat: ");
-				String agilityStr = in.readLine();
-				if (agilityStr != null) {
-					try {
-						agility = Integer.parseInt (agilityStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			int constitution = -1;
-			while (constitution < 0) {
-				System.out.println ("Introdueix la constitució: ");
-				String constitutionStr = in.readLine();
-				if (constitutionStr != null) {
-					try {
-						constitution = Integer.parseInt (constitutionStr);
-					} catch (NumberFormatException nfe) {
-						// Ignore
-					}
-				}
-			}
-			ci = new CharacterInfo (name, surname,
-		            intelligence, memory, strength, agility, constitution);
-		} catch (IOException ioe) {
-			System.err.println ("Error llegint la informació del personatge!");
-			return;
-		}
+		CharacterInfo ci;
+
+		//Separo cada part del Character per crear un objecte Character
+		String[] parts = Character.split("-");
+
+
+		String name = parts[0];
+		String surname = parts[1];
+		int intelligence = Integer.parseInt(parts[2]);
+		int memory = Integer.parseInt(parts[3]);
+		int strength = Integer.parseInt(parts[4]);
+		int agility = Integer.parseInt(parts[5]);
+		int constitution = Integer.parseInt(parts[6]);
+
+		ci = new CharacterInfo (name, surname, intelligence, memory, strength, agility, constitution);
+
 		try {
 			boolean success = charactersDB.insertCharacter (ci);
 			if (!success) {
-				System.out.println ("Aquest personatge ja estava a la base de dades.");
+				System.out.println ("S'ha intentat afegir un personatge que ja estava a la base de dades.");
+				return "ERROR: Personatge ja existent a la base de dades"; //Si falla li enviem al client un missatge d'error
 			}
 		} catch (IOException ioe) {
 			System.err.println ("Error a la base de dades!");
+			return "Error a la base de dades!";
 		}
+
+		return "OK, personatge afegit correctament"; //Si tot va bé li diem al client
 	}
 
 	private static void deleteCharacter() {
@@ -235,6 +177,7 @@ class ClientHandler implements Runnable {
 				String resposta = switch (numero) {
 					case 1 -> Server.listCompleteNames();
 					case 2 -> Server.infoFromOneCharacter(input.substring(2));
+					case 3 -> Server.addCharacter(input.substring(2));
 						/*
 
 						case 3 -> addCharacter();
