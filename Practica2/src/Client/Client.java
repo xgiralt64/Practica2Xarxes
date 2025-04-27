@@ -6,6 +6,7 @@ import java.net.*;
 
 public class Client {
 	public static void main(String[] args) {
+
 		try (
 				Socket socket = new Socket("localhost", 12345);
 				InputStream in = socket.getInputStream();
@@ -49,10 +50,15 @@ public class Client {
 				System.out.println();
 			}
 
+		} catch (ConnectException e){ //Excepció quan el servidor no es troba
+			System.out.println("Servidor no disponible.");
+		} catch (UnknownHostException e) {
+			System.out.println("Servidor no disponible.");
 		} catch (IOException e) {
 			System.err.println("Error de connexió amb el servidor.");
 			e.printStackTrace();
 		}
+
 	}
 
 

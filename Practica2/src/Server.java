@@ -1,17 +1,23 @@
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Server {
 	//BUGS:
 	//quan el client envia un missatge amb un espai no funciona
-
-
+	//gestionar en el cliente cuando no encuentra un personaje o no recibe lo querido
+	private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>());
 	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
 	private static CharactersDB charactersDB;
+	private static ServerSocket serverSocket = null; //ServerSocket per acceptar connexions
+	private static final int PORT = 12345;
+	private static int ClientIdCounter = 1;
 
 	public static void main (String[] args) {
-		final int PORT = 12345;
+		//final int PORT = 12345;
 
 		//Abans de fer res deixem que carregui la BD
 		try {
@@ -22,13 +28,24 @@ public class Server {
 		}
 
 		//Per cada client acceptem la seva connexió i li creem un thread per a ell. (Nosaltres ho fem concurrent)
-		try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-			System.out.println("Servidor escoltant al port " + PORT);
+		try{
+			System.out.println("Servidor engegat, escoltant al port " + PORT);
+			serverSocket = new ServerSocket(PORT);
 
 			while (true) {
-				Socket clientSocket = serverSocket.accept();
-				System.out.println("Nou client connectat.");
-				new Thread(new ClientHandler(clientSocket)).start();
+				Socket newSocket = serverSocket.accept();
+				System.out.println("[Servidor] --> Connexió acceptada de " + newSocket.getInetAddress().getHostAddress());
+				ClientHandler clientHandler = new ClientHandler(newSocket, ClientIdCounter++);
+				synchronized (clients) {
+					clients.add(clientHandler);
+					System.out.println("[Servidor] --> Nou client afegit a la llista. Total clients connectats: " + clients.size());
+				}
+				Thread clientThread = new Thread(clientHandler);
+				clientThread.start();
+
+//				Socket clientSocket = serverSocket.accept();
+//				System.out.println("Nou client connectat.");
+//				new Thread(new ClientHandler(clientSocket)).start();
 			}
 
 		} catch (IOException e) {
@@ -36,7 +53,6 @@ public class Server {
 		}
 
 	}
-
 
 
 	public static String listCompleteNames() { //ns si les funcions poden ser publiques. Mirar
@@ -135,12 +151,34 @@ public class Server {
 
 	private static void quit() {
 		try {
-			charactersDB.close();
-			System.exit (0);
-		} catch (IOException ioe) {
-			System.err.println ("Error tancant base de dades!");
-			System.exit (-1);
+			if (serverSocket != null && !serverSocket.isClosed()) {
+				serverSocket.close();
+			}
+
+			synchronized (clients) {
+				for (ClientHandler handler : clients) {
+					handler.tancar();
+				}
+				clients.clear();
+			}
+
+			if (charactersDB != null) {
+				charactersDB.close();
+			}
+
+			System.out.println("Servidor tancat correctament.");
+		} catch (IOException e) {
+			System.err.println("Error tancant el servidor: " + e.getMessage());
 		}
+
+
+//		try {
+//			charactersDB.close();
+//			System.exit (0);
+//		} catch (IOException ioe) {
+//			System.err.println ("Error tancant base de dades!");
+//			System.exit (-1);
+//		}
 	}
 
 }
@@ -150,9 +188,14 @@ public class Server {
 
 class ClientHandler implements Runnable {
 	private Socket clientSocket;
+	private int clientId;
 
-	public ClientHandler(Socket socket) {
+	public ClientHandler(Socket socket, int clientId) {
 		this.clientSocket = socket;
+		this.clientId = clientId;
+	}
+	private void log(String message) {
+		System.out.println("[CLIENT #" + clientId + "] --> " + message);
 	}
 
 	@Override
@@ -178,15 +221,29 @@ class ClientHandler implements Runnable {
 					out.write("Error: Introdueix un número enter.".getBytes());
 					continue;
 				}
-
-				String resposta = switch (numero) {
-					case 1 -> Server.listCompleteNames();
-					case 2 -> Server.infoFromOneCharacter(input.substring(2));
-					case 3 -> Server.addCharacter(input.substring(2));
-					case 4 -> Server.deleteCharacter(input.substring(2));
-					default -> "Número no vàlid. Introdueix un valor del 1 al 5.";
+				String resposta;
+				switch (numero) {
+					case 1 -> {
+						log("Accedint a la base de dades per llistar noms complets.");
+						resposta = Server.listCompleteNames();
+					}
+					case 2 -> {
+						log("Accedint a la base de dades per obtenir informació d'un personatge.");
+						resposta = Server.infoFromOneCharacter(input.substring(2));
+					}
+					case 3 -> {
+						log("Afegint un nou personatge a la base de dades.");
+						resposta = Server.addCharacter(input.substring(2));
+					}
+					case 4 -> {
+						log("Eliminant un personatge de la base de dades.");
+						resposta = Server.deleteCharacter(input.substring(2));
+					}
+					default -> {
+						log("Número d'opció no vàlid rebut: " + numero);
+						resposta = "Número no vàlid. Introdueix un valor del 1 al 5.";
+					}
 				};
-
 				out.write(resposta.getBytes());
 			}
 
@@ -199,6 +256,16 @@ class ClientHandler implements Runnable {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	public void tancar() {
+		try {
+			if (clientSocket != null && !clientSocket.isClosed()) {
+				clientSocket.close();
+			}
+		} catch (IOException e) {
+			System.err.println("Error tancant la connexió del client: " + e.getMessage());
 		}
 	}
 }
