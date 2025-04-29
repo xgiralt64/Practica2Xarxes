@@ -8,9 +8,9 @@ import java.util.List;
 public class Server {
 	//BUGS:
 	//quan el client envia un missatge amb un espai no funciona
-	//gestionar en el cliente cuando no encuentra un personaje o no recibe lo querido
+	//gestionar en el cliente quan no recibe lo querido
 	private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>());
-	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
+	private static final String CHARACTERS_DB_NAME = "/home/xavier/Documents/Universitat/Segon/SegonSemestre/Xarxes/Practica2Bo/Practica2Xarxes/Practica2/src/charactersDB.dat";
 	private static CharactersDB charactersDB;
 	private static ServerSocket serverSocket = null; //ServerSocket per acceptar connexions
 	private static final int PORT = 12345;
@@ -87,13 +87,15 @@ public class Server {
 
 			} else {
 				System.out.println ("Personatge no trobat.");
+				return "Personatge no trobat.";
 			}
 		} catch (IOException ioe) {
 			System.err.println ("Error a la base de dades!");
+			return "Error a la base de dades!";
 		}
-		return ""; //En cas d'error retorno "" (Mirar si es pot fer millor).
 
-	}
+
+    }
 
 	public static String addCharacter(String Character) {
 
