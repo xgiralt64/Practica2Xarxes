@@ -13,7 +13,6 @@ public class Client {
 				OutputStream out = socket.getOutputStream();
 				BufferedReader consola = new BufferedReader(new InputStreamReader(System.in))
 		) {
-
 			for (;;) {
 				printMenu();
 				int option = getOption();
@@ -44,23 +43,18 @@ public class Client {
 				int bytesRead = in.read(buffer);
 				if (bytesRead != -1) {
 					String resposta = new String(buffer, 0, bytesRead);
-					System.out.println("Servidor:\n" + resposta);
+					System.out.println("[Servidor]:\n" + resposta + "\n");
 				}
-
-				System.out.println();
 			}
-
 		} catch (ConnectException e){ //Excepció quan el servidor no es troba
 			System.out.println("Servidor no disponible.");
 		} catch (UnknownHostException e) {
 			System.out.println("Servidor no disponible.");
 		} catch (IOException e) {
-			System.err.println("Error de connexió amb el servidor.");
-			e.printStackTrace();
+			System.out.println("Error de connexió amb el servidor.");
 		}
-
+		System.out.println();
 	}
-
 
 
 	private static void printMenu() {
@@ -99,7 +93,6 @@ public class Client {
 			System.err.println ("Error llegint el nom!");
 		}
 		return "2-" + name; //Retornem amb el format 2-<NomPersonatge> (apunt per enviar al server)
-
 	}
 
 

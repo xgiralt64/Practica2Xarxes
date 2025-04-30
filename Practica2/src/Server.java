@@ -7,9 +7,9 @@ import java.util.List;
 
 public class Server {
 	//BUGS:
-	//quan el client envia un missatge amb un espai no funciona
-	//gestionar en el cliente quan no recibe lo querido
-	//FALTA ARREGLAR QUE NO ES TROBA LA BD
+	//quan el client envia un missatge amb un espai no funciona --
+	//gestionar en el cliente quan no recibe lo querido --
+	//FALTA ARREGLAR QUE NO ES TROBA LA BD --
 	private static final List<ClientHandler> clients = Collections.synchronizedList(new ArrayList<>());
 	private static final String CHARACTERS_DB_NAME = "src/charactersDB.dat";
 	private static CharactersDB charactersDB;
@@ -18,8 +18,6 @@ public class Server {
 	private static int ClientIdCounter = 1;
 
 	public static void main (String[] args) {
-		//final int PORT = 12345;
-
 		//Abans de fer res deixem que carregui la BD
 		try {
 			charactersDB = new CharactersDB (CHARACTERS_DB_NAME);
@@ -43,20 +41,15 @@ public class Server {
 				}
 				Thread clientThread = new Thread(clientHandler);
 				clientThread.start();
-
-//				Socket clientSocket = serverSocket.accept();
-//				System.out.println("Nou client connectat.");
-//				new Thread(new ClientHandler(clientSocket)).start();
 			}
 
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
 
 
-	public static String listCompleteNames() { //ns si les funcions poden ser publiques. Mirar
+	public static synchronized String listCompleteNames() { //ns si les funcions poden ser publiques. Mirar
 		int numCharacters = charactersDB.getNumCharacters();
 		//Construïm una String amb els Characters
 		StringBuilder characters = new StringBuilder();
@@ -79,7 +72,7 @@ public class Server {
 		return characters.toString();
 	}
 
-	public static String infoFromOneCharacter(String name) {
+	public static synchronized String infoFromOneCharacter(String name) {
 		try {
 			int n = charactersDB.searchCharacter (name);
 			if (n != -1) {
@@ -94,17 +87,14 @@ public class Server {
 			System.err.println ("Error a la base de dades!");
 			return "Error a la base de dades!";
 		}
-
-
     }
 
-	public static String addCharacter(String Character) {
+	public static synchronized String addCharacter(String Character) {
 
 		CharacterInfo ci;
 
 		//Separo cada part del Character per crear un objecte Character
 		String[] parts = Character.split("-");
-
 
 		String name = parts[0];
 		String surname = parts[1];
@@ -130,7 +120,7 @@ public class Server {
 		return "OK, personatge afegit correctament"; //Si tot va bé li diem al client
 	}
 
-	public static String deleteCharacter(String name) {
+	public static synchronized String deleteCharacter(String name) {
 
         String fullName = "";
         try {
@@ -167,26 +157,17 @@ public class Server {
 
 			if (charactersDB != null) {
 				charactersDB.close();
+				System.exit (0);
 			}
 
 			System.out.println("Servidor tancat correctament.");
 		} catch (IOException e) {
 			System.err.println("Error tancant el servidor: " + e.getMessage());
+			System.exit (-1);
 		}
-
-
-//		try {
-//			charactersDB.close();
-//			System.exit (0);
-//		} catch (IOException ioe) {
-//			System.err.println ("Error tancant base de dades!");
-//			System.exit (-1);
-//		}
 	}
 
 }
-
-
 
 
 class ClientHandler implements Runnable {
@@ -255,9 +236,10 @@ class ClientHandler implements Runnable {
 		} finally {
 			try {
 				clientSocket.close();
-				System.out.println("Client desconnectat.");
+				log("desconnectat");
+				//System.out.println("[Client"+clientId+ "desconnectat.");
 			} catch (IOException e) {
-				e.printStackTrace();
+				e.getMessage();
 			}
 		}
 	}
