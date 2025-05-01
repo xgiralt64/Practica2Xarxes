@@ -9,14 +9,15 @@ public class Client {
 
 		try (
 				Socket socket = new Socket("localhost", 12345);
+				//S'obté el canal d'entrada i sortida per rebre i enviar dades al servidor
 				InputStream in = socket.getInputStream();
 				OutputStream out = socket.getOutputStream();
-				BufferedReader consola = new BufferedReader(new InputStreamReader(System.in))
 		) {
 			for (;;) {
 				printMenu();
 				int option = getOption();
 
+				//Depenent de l'opcio s'envia un missatge diferent al servidor
 				switch (option) {
 					case 1:
 						//Envia "1" per llistar noms
@@ -34,6 +35,7 @@ public class Client {
 						out.write(deleteCharacter().getBytes());
 						break;
 					case 5:
+						out.write("5".getBytes());
 						quit();
 						break;
 				}
@@ -41,6 +43,7 @@ public class Client {
 				// Llegeix i mostra la resposta del servidor
 				byte[] buffer = new byte[2048];
 				int bytesRead = in.read(buffer);
+				//Si les dades son correctas les mostra per consola
 				if (bytesRead != -1) {
 					String resposta = new String(buffer, 0, bytesRead);
 					System.out.println("[Servidor]:\n" + resposta + "\n");

@@ -32,20 +32,27 @@ public class Server {
 			serverSocket = new ServerSocket(PORT);
 
 			while (true) {
+				//esperem i aceptem una nova conexio de client
 				Socket newSocket = serverSocket.accept();
-				System.out.println("[Servidor] --> Connexió acceptada de " + newSocket.getInetAddress().getHostAddress());
-				ClientHandler clientHandler = new ClientHandler(newSocket, ClientIdCounter++);
-				synchronized (clients) {
-					clients.add(clientHandler);
-					System.out.println("[Servidor] --> Nou client afegit a la llista. Total clients connectats: " + clients.size());
-				}
-				Thread clientThread = new Thread(clientHandler);
-				clientThread.start();
+				gestionarNouClient(newSocket);
 			}
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
+	}
+
+	private static void gestionarNouClient(Socket newSocket) {
+		System.out.println("[Servidor] --> Connexió acceptada de " + newSocket.getInetAddress().getHostAddress());
+		ClientHandler clientHandler = new ClientHandler(newSocket, ClientIdCounter++);
+		//s'afegeix un nou client a la llista de clients
+		synchronized (clients) {
+			clients.add(clientHandler);
+			System.out.println("[Servidor] --> Nou client afegit a la llista. Total clients connectats: " + clients.size());
+		}
+		//es fa servir un nou fil per atendre el client, i així pugui funcionar de manera concurrent
+		Thread clientThread = new Thread(clientHandler);
+		clientThread.start();
 	}
 
 
@@ -141,32 +148,6 @@ public class Server {
         }
         return "OK, personatge " + fullName + " eliminat correctament";
     }
-
-	private static void quit() {
-		try {
-			if (serverSocket != null && !serverSocket.isClosed()) {
-				serverSocket.close();
-			}
-
-			synchronized (clients) {
-				for (ClientHandler handler : clients) {
-					handler.tancar();
-				}
-				clients.clear();
-			}
-
-			if (charactersDB != null) {
-				charactersDB.close();
-				System.exit (0);
-			}
-
-			System.out.println("Servidor tancat correctament.");
-		} catch (IOException e) {
-			System.err.println("Error tancant el servidor: " + e.getMessage());
-			System.exit (-1);
-		}
-	}
-
 }
 
 
@@ -185,12 +166,14 @@ class ClientHandler implements Runnable {
 	@Override
 	public void run() {
 		try (
+				// Obrim els canals d'entrada i sortida del socket
 				InputStream in = clientSocket.getInputStream();
 				OutputStream out = clientSocket.getOutputStream()
 		) {
-			byte[] buffer = new byte[1024];
+			byte[] buffer = new byte[1024]; // Buffer per rebre dades del client
 			int bytesRead;
 
+			//llegim contínuament del client mentre estigui connectat
 			while ((bytesRead = in.read(buffer)) != -1) {
 				String input = new String(buffer, 0, bytesRead).trim();
 				System.out.println("Rebut: " + input);
@@ -205,7 +188,14 @@ class ClientHandler implements Runnable {
 					out.write("Error: Introdueix un número enter.".getBytes());
 					continue;
 				}
+				// Si el client envia 5, es descoencta voluntàriament
+				if (numero == 5) {
+					log("Client ha demanat desconnexió.");
+					break; // no enviem cap resposta, sortim del bucle
+				}
+
 				String resposta;
+				// Tractem les diferents opcions del menú del client
 				switch (numero) {
 					case 1 -> {
 						log("Accedint a la base de dades per llistar noms complets.");
@@ -228,19 +218,15 @@ class ClientHandler implements Runnable {
 						resposta = "Número no vàlid. Introdueix un valor del 1 al 5.";
 					}
 				};
+				//enviem la resposta al client
 				out.write(resposta.getBytes());
 			}
 
 		} catch (IOException e) {
-			System.out.println("Error de comunicació: " + e.getMessage());
+			log("Error de comunicació: " + e.getMessage());
 		} finally {
-			try {
-				clientSocket.close();
-				log("desconnectat");
-				//System.out.println("[Client"+clientId+ "desconnectat.");
-			} catch (IOException e) {
-				e.getMessage();
-			}
+			//Tanquem el socket del client i mostrem missatge de desconnexio
+			tancar();
 		}
 	}
 
@@ -248,6 +234,7 @@ class ClientHandler implements Runnable {
 		try {
 			if (clientSocket != null && !clientSocket.isClosed()) {
 				clientSocket.close();
+				log("desconnectat");
 			}
 		} catch (IOException e) {
 			System.err.println("Error tancant la connexió del client: " + e.getMessage());
